@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visualização - Lab 4</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto+Slab" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/fonts.css" rel="stylesheet">
+    <style>
+        .municipio {
+            stroke: #fff;
+            stroke-width: 0.8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <a href="index.html" class="sidebar-btn"><span class="icon-return"></span> Home</a>
+
+        <div class="header">
+            <div class="row">
+                <div class="col-xs-10">
+                    <h2>Lab 4: O sertão.</h2>
+                </div>
+            </div>
+        </div>
+        <ol class="breadcrumb">
+
+            <li><a href="map1.html">Mapa 1</a></li>
+            <li><a href="map2.html">Mapa 2</a></li>
+            <li><a href="map3.html">Mapa 3</a></li>
+        </ol>
+        <header>
+            <h3 align="center">Qual a população total dos municípios?</h3>
+        </header>
+
+        <div id="chart"></div>
+    </div>
+
+    <footer></footer>
+
+    <!-- scripts -->
+    <script src="js/d3.v4.min.js"></script>
+    <script src="//d3js.org/d3-color.v1.min.js"></script>
+    <script src="//d3js.org/topojson.v1.min.js"></script>
+    <script>
+        var
+            width = 1000,
+            height = 500;
+
+        var svg = d3.select("#chart")
+            .append("svg")
+            .attr('version', '1.1')
+            .attr('viewBox', '0 0 ' + width + ' ' + height)
+            .attr('width', '100%')
+            .attr('class', 'map-chart');
+
+        var projection = d3.geoAlbers()
+            .center([-41.702846, -10.313559])
+            .rotate([0, 0])
+            .parallels([0, 0])
+            .scale(2000);
+
+        var path = d3.geoPath().projection(projection);
+
+        var color = d3.scaleThreshold();
+
+        d3.json("municipios_sab.json", function (error, pb) {
+            if (error) throw error;
+
+            var municipios = topojson.feature(pb, pb.objects.municipios_sab);
+
+            // Orange
+            // .range([d3.rgb(248, 80, 44, 0.2), d3.rgb(248, 80, 44, 0.4), d3.rgb(248, 80, 44, 0.6), d3.rgb(248, 80, 44, 0.8), d3.rgb(248, 80, 44, 1)]);
+            // Blue
+            // .range([d3.rgb(8, 48, 107, 0.2), d3.rgb(8, 48, 107, 0.4), d3.rgb(8, 48, 107, 0.6), d3.rgb(8, 48, 107, 0.8), d3.rgb(8, 48, 107, 1)]);
+
+            svg.selectAll(".municipio")
+                .data(municipios.features)
+                .enter().append("path")
+                .attr("id", function (d) {
+                    return "municipio" + d.properties.ID;
+                })
+                .attr("d", path);
+            //.attr("fill", function(d){ return color(+d.AREA_KM2)});
+
+
+            d3.csv("info_geral.csv", function (error, dados) {
+
+                if (error) throw error;
+
+                /* color
+                    .domain([5000, 10000, 30000, 50000, 100000])
+                  // Purple
+                      .range([d3.rgb(84, 39, 143, 0.2), d3.rgb(84, 39, 143, 0.4), d3.rgb(84, 39, 143, 0.6), d3.rgb(84, 39, 143, 0.8), d3.rgb(84, 39, 143, 1)]);
+                  color.domain([5000, 10000, 15000, 20000, 30000,40000,50000])
+                      .range(["#007f00","#006600","#004c00","#003300","#00ff00",]);*/
+                color
+                    .domain([10, 50, 30, 20, 100])
+
+                // Purple
+                .range([d3.rgb(205, 92, 92, 0.2), d3.rgb(205, 92, 92, 0.4), d3.rgb(205, 92, 92, 0.6), d3.rgb(205, 92, 92, 0.8), d3.rgb(205, 92, 92, 1)]);
+
+
+                // POP_TOT...População.total.do.município.do.ano.de.referência..Fonte..IBGE....Habitantes.
+                for (var i in dados) {
+                    var municipio = dados[i];
+                    if (municipio.GEOCODIGO) {
+                        svg.select("#municipio" + municipio.GEOCODIGO)
+                            .attr("fill", color(+municipio.POP_TOT));
+                    }
+                };
+
+
+            });
+
+        });
+
+    </script>
+
+</body>
+
+</html>
